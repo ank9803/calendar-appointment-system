@@ -1,0 +1,20 @@
+{
+  "server": {
+    "port": 3005
+  },
+  "client_errors": {
+    "400": {
+      "error_code": null,
+      "log_level": "notice"
+    },
+    "409": {
+      "error_code": "DUPLICATE_ERROR",
+      "log_level": "notice"
+    }
+  },
+  "event": {
+    "start_hour": "10:00 AM",
+    "end_hour": "05:00 PM",
+    "duration": 30
+  }
+}

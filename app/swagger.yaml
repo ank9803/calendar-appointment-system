@@ -1,0 +1,445 @@
+---
+swagger: "2.0"
+info:
+  description: "APIs related to calendar appointment system"
+  version: "1.0.0"
+  title: "Calendar Appointment System"
+host: "localhost:3005"
+basePath: "/"
+tags:
+  - name: "Event"
+    description: "API related to the user event management"
+  - name: "Time Slot"
+    description: "API related to the time slots"
+schemes:
+  - "http"
+consumes:
+  - "application/json"
+produces:
+  - "application/json"
+paths:
+  /status:
+    get:
+      x-swagger-router-controller: "StatusDetails"
+      operationId: "getSystemStatus"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      x-public-operation: true
+      responses:
+        200:
+          description: "The server status will be returned"
+          schema:
+            $ref: "#/definitions/server_status_response"
+        default:
+          $ref: "#/responses/server_error_model"
+      tags:
+        - "Status"
+      summary: "Gets the status of the service"
+  /event:
+    post:
+      x-swagger-router-controller: "Event"
+      operationId: "createEvent"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - $ref: "#/parameters/event_create_param"
+      responses:
+        201:
+          description: "The newly created calendar event will be returned"
+          schema:
+            $ref: "#/definitions/event_response_def"
+        400:
+          description: "Validation error on create event"
+          schema:
+            $ref: "#/definitions/event_create_validation_error_model"
+        409:
+          description: "Error when the calendar event is already created"
+          schema:
+            $ref: "#/definitions/conflict_error_model"
+        default:
+          $ref: "#/responses/server_error_model"
+      tags:
+        - "Event"
+      summary: "Create calendar event for the user"
+    get:
+      x-swagger-router-controller: "Event"
+      operationId: "listEvents"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - $ref: "#/parameters/start_date_param"
+        - $ref: "#/parameters/end_date_param"
+      responses:
+        200:
+          description: "The list of created events"
+          schema:
+            type: array
+            items:
+              $ref: "#/definitions/list_event_response_def"
+        204:
+          $ref: "#/responses/no_content"
+        400:
+          description: "Validation error on get event list"
+          schema:
+            $ref: "#/definitions/event_get_error_model"
+        default:
+          $ref: "#/responses/server_error_model"
+      tags:
+        - "Event"
+      summary: "Get the list of calendar events for the user"
+  /free-slots:
+    get:
+      x-swagger-router-controller: "TimeSlot"
+      operationId: "listFreeTimeSlots"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - $ref: "#/parameters/free_slot_date"
+      responses:
+        200:
+          description: "The list of free time slots"
+          schema:
+            $ref: "#/definitions/time_slots_response_def"
+        204:
+          $ref: "#/responses/no_content"
+        400:
+          description: "Validation error while fetching free time slots"
+          schema:
+            $ref: "#/definitions/free_time_slots_get_error_model"
+        default:
+          $ref: "#/responses/server_error_model"
+      tags:
+        - "Time Slot"
+      summary: "Get the list of all the free slot available for given date"
+  /slots:
+    post:
+      x-swagger-router-controller: "TimeSlot"
+      operationId: "createTimeSlots"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - $ref: "#/parameters/slot_create_param"
+      responses:
+        201:
+          description: "The time slots that were created will be returned"
+          schema:
+            $ref: "#/definitions/slot_create_response_def"
+        400:
+          description: "Validation error on create slots"
+          schema:
+            $ref: "#/definitions/slot_create_validation_error_model"
+        409:
+          description: "Error when the slot for the given date already exist"
+          schema:
+            $ref: "#/definitions/conflict_error_model"
+        default:
+          $ref: "#/responses/server_error_model"
+      tags:
+        - "Time Slot"
+      summary: "Creates the time slots for given date"
+parameters:
+  event_create_param:
+    name: event_payload
+    in: body
+    required: true
+    description: "The payload to create the calendar event"
+    schema:
+      $ref: "#/definitions/event_create_param_def"
+  slot_create_param:
+    name: slot_payload
+    in: body
+    required: true
+    description: "The payload to create the time slots"
+    schema:
+      $ref: "#/definitions/slot_create_param_def"
+  start_date_param:
+    name: start_date
+    description: "Filter based on the start date"
+    in: query
+    type: string
+    format: date
+    required: true
+  end_date_param:
+    name: end_date
+    description: "Filter based on the end date"
+    in: query
+    type: string
+    format: date
+    required: true
+  free_slot_date:
+    name: date
+    description: "Filter based on the date for which the free slots are fetched"
+    in: query
+    type: string
+    format: date
+    required: true
+definitions:
+  server_error_model:
+    type: "object"
+    required:
+      - "message"
+    properties:
+      message:
+        type: "string"
+      exception:
+        $ref: "#/definitions/exception_model"
+  server_status_response:
+    type: "object"
+    required:
+      - "up_time"
+    properties:
+      up_time:
+        type: "integer"
+  exception_model:
+    type: "object"
+  event_response_def:
+    type: object
+    required:
+      - status
+      - time
+    properties:
+      status:
+        description: "The status of event"
+        type: string
+        enum:
+          - occupied
+      time:
+        description: "Date time of the event"
+        type: string
+        format: date-time
+  list_event_response_def:
+    type: object
+    required:
+      - date
+      - slots
+    properties:
+      date:
+        description: "The date of an event"
+        type: string
+        format: date-time
+      slots:
+        type: array
+        items:
+          type: object
+          required:
+            - status
+            - time
+          properties:
+            status:
+              description: "The status of event"
+              type: string
+              enum:
+                - available
+                - occupied
+            time:
+              description: "Date time of the event"
+              type: string
+              format: date-time
+  slot_create_response_def:
+    type: object
+    required:
+      - date
+      - end_time
+      - start_time
+      - slots
+    properties:
+      date:
+        description: "The date for which the time slots are available"
+        type: string
+        format: date
+      start_time:
+        description: "The start time when the user is available"
+        type: string
+      end_time:
+        description: "The end time after which the user is not available"
+        type: string
+      slots:
+        type: array
+        items:
+          type: object
+          required:
+            - status
+            - time
+          properties:
+            status:
+              description: "The slot status"
+              type: string
+              enum:
+                - available
+            time:
+              description: "Date time of the slot"
+              type: string
+              format: date-time
+  time_slots_response_def:
+    type: array
+    items:
+      type: string
+      format: date-time
+  event_create_param_def:
+    type: object
+    required:
+      - date_time
+      - duration
+    properties:
+      date_time:
+        description: "The date and time for which the event should be created"
+        type: string
+        format: date-time
+      duration:
+        description: "You can create an event with duration of 30 minutes"
+        type: integer
+        minimum: 30
+        maximum: 30
+    additionalProperties: false
+  slot_create_param_def:
+    type: object
+    required:
+      - time_slot_date
+    properties:
+      time_slot_date:
+        description: "The date for which the time slots need to be created"
+        type: string
+        format: date
+    additionalProperties: false
+  event_create_validation_error_model:
+    type: object
+    required:
+      - code
+      - message
+    properties:
+      code:
+        type: string
+        enum:
+          - REQUIRED
+          - PATTERN
+      message:
+        type: string
+      errors:
+        type: array
+        items:
+          $ref: "#/definitions/event_create_validation_error_single_model"
+  event_create_validation_error_single_model:
+    type: object
+    required:
+      - code
+      - message
+      - path
+    properties:
+      code:
+        type: string
+        enum:
+          - PATTERN
+          - REQUIRED
+          - OBJECT_MISSING_REQUIRED_PROPERTY
+          - INVALID_TYPE
+          - MINIMUM
+          - MAXIMUM
+          - OBJECT_ADDITIONAL_PROPERTIES
+          - INVALID_DATE_TIME
+      message:
+        type: string
+      path:
+        type: array
+        items:
+          type: string
+      description:
+        type: string
+  slot_create_validation_error_model:
+    type: object
+    required:
+      - code
+      - message
+    properties:
+      code:
+        type: string
+        enum:
+          - REQUIRED
+          - PATTERN
+      message:
+        type: string
+      errors:
+        type: array
+        items:
+          $ref: "#/definitions/slot_create_validation_error_single_model"
+  slot_create_validation_error_single_model:
+    type: object
+    required:
+      - code
+      - message
+      - path
+    properties:
+      code:
+        type: string
+        enum:
+          - PATTERN
+          - REQUIRED
+          - OBJECT_MISSING_REQUIRED_PROPERTY
+          - INVALID_TYPE
+          - OBJECT_ADDITIONAL_PROPERTIES
+          - INVALID_TIME_SLOT_DATE
+      message:
+        type: string
+      path:
+        type: array
+        items:
+          type: string
+      description:
+        type: string
+  conflict_error_model:
+    type: object
+    required:
+      - code
+      - message
+    properties:
+      code:
+        type: string
+        enum:
+          - DUPLICATE_ERROR
+      message:
+        type: string
+  event_get_error_model:
+    type: object
+    required:
+      - code
+      - message
+    properties:
+      code:
+        type: string
+        enum:
+          - REQUIRED
+          - INVALID_TYPE
+          - INVALID_FORMAT
+          - INVALID_START_END_DATE
+      message:
+        type: string
+  free_time_slots_get_error_model:
+    type: object
+    required:
+      - code
+      - message
+    properties:
+      code:
+        type: string
+        enum:
+          - REQUIRED
+          - INVALID_TYPE
+          - INVALID_FORMAT
+      message:
+        type: string
+responses:
+  server_error_model:
+    description: "Server error occurred"
+    schema:
+      $ref: "#/definitions/server_error_model"
+  no_content:
+    description: "No entities found that matches the query"
