@@ -16,7 +16,7 @@
     "express": "^4.16.3",
     "firebase-admin": "^8.10.0",
     "lodash": "4.17.15",
-    "moment": "^2.24.0",
+    "moment": "^2.29.2",
     "swagger-tools": "^0.10.1",
     "swagger-ui-express": "^4.0.2",
     "yamljs": "^0.3.0"
